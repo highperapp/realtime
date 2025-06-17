@@ -25,6 +25,7 @@ class SSEHttp3Protocol implements ProtocolInterface
     private SSEStreamManager $streamManager;
     private SSEEventMultiplexer $eventMultiplexer;
     private SSECompressionManager $compressionManager;
+    private SSEMultiplexer $multiplexer;
     
     private array $connections = [];
     private array $channels = [];
@@ -48,6 +49,7 @@ class SSEHttp3Protocol implements ProtocolInterface
      */
     private function initializeComponents(): void
     {
+        $this->multiplexer = new SSEMultiplexer($this->logger, $this->config);
         $this->streamManager = new SSEStreamManager($this->logger, $this->config);
         $this->eventMultiplexer = new SSEEventMultiplexer($this->logger, $this->config);
         $this->compressionManager = new SSECompressionManager($this->logger, $this->config);
@@ -790,6 +792,70 @@ class SSEHttp3Protocol implements ProtocolInterface
     }
 
     /**
+     * Create multiplexed SSE stream
+     */
+    public async function createMultiplexedStream(
+        string $connectionId,
+        string $streamName,
+        array $options = []
+    ): ?SSEMultiplexedStream {
+        if (!isset($this->connections[$connectionId])) {
+            return null;
+        }
+        
+        $connection = $this->connections[$connectionId]->getQuicConnection();
+        $stream = yield $this->multiplexer->createStream($connection, $streamName, $options);
+        
+        $this->logger->info("Created multiplexed SSE stream", [
+            'connection_id' => $connectionId,
+            'stream_name' => $streamName,
+            'stream_id' => $stream->getId()
+        ]);
+        
+        return $stream;
+    }
+    
+    /**
+     * Send event to specific multiplexed stream
+     */
+    public async function sendToMultiplexedStream(string $streamId, array $eventData): bool
+    {
+        return yield $this->multiplexer->sendToStream($streamId, $eventData);
+    }
+    
+    /**
+     * Broadcast to multiple multiplexed streams
+     */
+    public async function broadcastToMultiplexedStreams(array $eventData, array $streamIds = null): array
+    {
+        return yield $this->multiplexer->broadcast($eventData, $streamIds);
+    }
+    
+    /**
+     * Create stream group for related streams
+     */
+    public function createStreamGroup(string $groupName, array $streamIds): SSEStreamGroup
+    {
+        return $this->multiplexer->createStreamGroup($groupName, $streamIds);
+    }
+    
+    /**
+     * Get multiplexing metrics
+     */
+    public function getMultiplexingMetrics(): array
+    {
+        return $this->multiplexer->getStreamMetrics();
+    }
+    
+    /**
+     * Close multiplexed stream
+     */
+    public async function closeMultiplexedStream(string $streamId): bool
+    {
+        return yield $this->multiplexer->closeStream($streamId);
+    }
+
+    /**
      * Get default configuration
      */
     private function getDefaultConfig(): array
@@ -803,7 +869,9 @@ class SSEHttp3Protocol implements ProtocolInterface
             'compression_level' => 6,
             'event_buffer_size' => 1000,
             'stream_priority' => 'high',
-            'enable_0rtt' => true
+            'enable_0rtt' => true,
+            'max_streams_per_connection' => 50,
+            'stream_idle_timeout' => 300
         ];
     }
 }
