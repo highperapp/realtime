@@ -1,18 +1,18 @@
 {
-    "name": "easeappphi/highper-realtime",
+    "name": "easeappphp/highper-realtime",
     "description": "High-performance real-time web library for HighPer framework with WebSocket, SSE, and WebTransport support",
     "type": "library",
     "license": "MIT",
     "keywords": ["highper", "websocket", "sse", "realtime", "webtransport", "http3", "quic"],
     "authors": [
         {
-            "name": "HighPer Framework Team",
-            "email": "team@highper.dev"
+            "name": "EaseApp PHP Team",
+            "email": "raghu@easeapp.org"
         }
     ],
     "require": {
         "php": "^8.2",
-        "easeappphi/highper-framework": "^1.0",
+        "easeappphp/highper-core": "^1.0",
         "amphp/websocket-server": "^4.0",
         "amphp/http-server": "^3.0",
         "amphp/http-client": "^5.0",
