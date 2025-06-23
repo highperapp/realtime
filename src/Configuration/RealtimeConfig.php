@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Configuration;
+namespace HighPerApp\HighPer\Realtime\Configuration;
 
 class RealtimeConfig
 {

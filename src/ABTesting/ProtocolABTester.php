@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\ABTesting;
+namespace HighPerApp\HighPer\Realtime\ABTesting;
 
 use Psr\Log\LoggerInterface;
 

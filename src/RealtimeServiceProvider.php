@@ -2,66 +2,61 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime;
+namespace HighPerApp\HighPer\Realtime;
 
-use EaseAppPHP\HighPer\Framework\Container\Container;
-use EaseAppPHP\HighPer\Framework\ServiceProvider\ServiceProviderInterface;
-use EaseAppPHP\HighPer\Realtime\Configuration\RealtimeConfig;
-use EaseAppPHP\HighPer\Realtime\Servers\UnifiedRealtimeServer;
-use EaseAppPHP\HighPer\Realtime\Broadcasting\BroadcastManager;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebSocketProtocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\ServerSentEventsProtocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebTransportProtocol;
+use HighPerApp\HighPer\ServiceProvider\CoreServiceProvider;
+use HighPerApp\HighPer\Contracts\ContainerInterface;
+use HighPerApp\HighPer\Contracts\ApplicationInterface;
+use HighPerApp\HighPer\Realtime\Configuration\RealtimeConfig;
+use HighPerApp\HighPer\Realtime\Servers\UnifiedRealtimeServer;
+use HighPerApp\HighPer\Realtime\Broadcasting\BroadcastManager;
+use HighPerApp\HighPer\Realtime\Protocols\WebSocketProtocol;
+use HighPerApp\HighPer\Realtime\Protocols\ServerSentEventsProtocol;
+use HighPerApp\HighPer\Realtime\Protocols\WebTransportProtocol;
 use Psr\Log\LoggerInterface;
 
-class RealtimeServiceProvider implements ServiceProviderInterface
+class RealtimeServiceProvider extends CoreServiceProvider
 {
-    private Container $container;
-    private RealtimeConfig $config;
-
-    public function __construct(Container $container)
+    public function register(ContainerInterface $container): void
     {
-        $this->container = $container;
-        $this->config = new RealtimeConfig($container->get('config')['realtime'] ?? []);
-    }
-
-    public function register(): void
-    {
+        // Get config from environment
+        $config = new RealtimeConfig($_ENV['REALTIME_CONFIG'] ?? []);
+        
         // Only register if real-time features are enabled
-        if (!$this->config->isEnabled()) {
+        if (!$config->isEnabled()) {
             return;
         }
 
         // Register configuration
-        $this->container->bind(RealtimeConfig::class, fn() => $this->config);
+        $this->singleton($container, RealtimeConfig::class, fn() => $config);
 
         // Register protocols based on configuration
-        $this->registerProtocols();
+        $this->registerProtocols($container, $config);
 
         // Register servers
-        $this->registerServers();
+        $this->registerServers($container, $config);
 
         // Register broadcasting services
-        $this->registerBroadcasting();
-
-        // Register middleware if needed
-        $this->registerMiddleware();
+        $this->registerBroadcasting($container, $config);
     }
 
-    public function boot(): void
+    public function boot(ApplicationInterface $app): void
     {
-        if (!$this->config->isEnabled()) {
+        $container = $app->getContainer();
+        $config = $container->get(RealtimeConfig::class);
+        
+        if (!$config->isEnabled()) {
             return;
         }
 
         // Auto-start servers based on configuration
-        if ($this->config->shouldAutoStart()) {
-            $this->startRealtimeServers();
+        if ($config->shouldAutoStart()) {
+            $this->startRealtimeServers($container, $config);
         }
 
         // Register routes if auto-routing is enabled
-        if ($this->config->shouldAutoRegisterRoutes()) {
-            $this->registerRealtimeRoutes();
+        if ($config->shouldAutoRegisterRoutes()) {
+            $this->registerRealtimeRoutes($container, $config);
         }
     }
 

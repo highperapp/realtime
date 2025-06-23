@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\Http3;
+namespace HighPerApp\HighPer\Realtime\Protocols\Http3;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
 use Psr\Log\LoggerInterface;
 
 /**

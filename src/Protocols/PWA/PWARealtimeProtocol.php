@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\PWA;
+namespace HighPerApp\HighPer\Realtime\Protocols\PWA;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\SSE\SSEHttp3Protocol;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
+use HighPerApp\HighPer\Realtime\Protocols\SSE\SSEHttp3Protocol;
 use Psr\Log\LoggerInterface;
 
 /**

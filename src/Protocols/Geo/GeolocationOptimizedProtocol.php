@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\Geo;
+namespace HighPerApp\HighPer\Realtime\Protocols\Geo;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
-use EaseAppPHP\HighPer\Realtime\Protocols\Http3\Http3Server;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\Adaptive\AdaptiveProtocolManager;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\Http3\Http3Server;
+use HighPerApp\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
+use HighPerApp\HighPer\Realtime\Protocols\Adaptive\AdaptiveProtocolManager;
 use Psr\Log\LoggerInterface;
 
 /**

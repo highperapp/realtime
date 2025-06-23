@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\Collaboration;
+namespace HighPerApp\HighPer\Realtime\Protocols\Collaboration;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebTransport\WebTransportProtocol;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
+use HighPerApp\HighPer\Realtime\Protocols\WebTransport\WebTransportProtocol;
 use Psr\Log\LoggerInterface;
 
 /**

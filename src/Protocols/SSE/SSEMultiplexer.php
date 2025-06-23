@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\SSE;
+namespace HighPerApp\HighPer\Realtime\Protocols\SSE;
 
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\Http3\QuicConnection;
+use HighPerApp\HighPer\Realtime\Protocols\Http3\QuicConnection;
 use Psr\Log\LoggerInterface;
 
 /**

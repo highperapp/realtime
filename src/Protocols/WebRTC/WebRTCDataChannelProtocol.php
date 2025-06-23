@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\WebRTC;
+namespace HighPerApp\HighPer\Realtime\Protocols\WebRTC;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
 use Psr\Log\LoggerInterface;
 
 /**

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols;
+namespace HighPerApp\HighPer\Realtime\Protocols;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;

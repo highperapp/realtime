@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\ConnectionPool;
+namespace HighPerApp\HighPer\Realtime\ConnectionPool;
 
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
-use EaseAppPHP\HighPer\Realtime\Protocols\Http3\QuicConnection;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\Http3\QuicConnection;
 use Psr\Log\LoggerInterface;
 
 /**

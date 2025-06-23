@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\Adaptive;
+namespace HighPerApp\HighPer\Realtime\Protocols\Adaptive;
 
 use Amp\Http\Server\Request;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
-use EaseAppPHP\HighPer\Realtime\Protocols\Http3\Http3Server;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebTransport\WebTransportProtocol;
-use EaseAppPHP\HighPer\Realtime\Protocols\WebRTC\WebRTCDataChannelProtocol;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\Http3\Http3Server;
+use HighPerApp\HighPer\Realtime\Protocols\WebSocket\WebSocketHttp3Protocol;
+use HighPerApp\HighPer\Realtime\Protocols\WebTransport\WebTransportProtocol;
+use HighPerApp\HighPer\Realtime\Protocols\WebRTC\WebRTCDataChannelProtocol;
 use Psr\Log\LoggerInterface;
 
 /**

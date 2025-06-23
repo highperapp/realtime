@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Protocols\Push;
+namespace HighPerApp\HighPer\Realtime\Protocols\Push;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
-use EaseAppPHP\HighPer\Realtime\Protocols\PWA\PWARealtimeProtocol;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\PWA\PWARealtimeProtocol;
 use Psr\Log\LoggerInterface;
 
 /**

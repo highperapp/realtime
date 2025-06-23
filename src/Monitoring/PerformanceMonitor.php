@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace EaseAppPHP\HighPer\Realtime\Monitoring;
+namespace HighPerApp\HighPer\Realtime\Monitoring;
 
-use EaseAppPHP\HighPer\Realtime\Protocols\ProtocolInterface;
+use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
 use Psr\Log\LoggerInterface;
 
 /**
