@@ -25,3 +25,7 @@ Thumbs.db
 # Testing
 /coverage/
 .phpunit.result.cache
+
+# Windows Zone.Identifier files
+*:Zone.Identifier
+*.Zone.Identifier
