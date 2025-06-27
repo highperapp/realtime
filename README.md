@@ -17,10 +17,10 @@ A high-performance, pluggable real-time web library for the HighPer PHP framewor
 
 ```bash
 # Install the real-time extension package
-composer require easeappphi/highper-realtime
+composer require highperapp/realtime
 
 # Copy environment configuration
-cp vendor/easeappphi/highper-realtime/.env.realtime.example .env.realtime
+cp vendor/highperapp/realtime/.env.realtime.example .env.realtime
 ```
 
 ## Quick Start
@@ -64,7 +64,7 @@ For more control, manually register the service provider:
 ```php
 <?php
 
-use EaseAppPHP\HighPer\Realtime\RealtimeServiceProvider;
+use HighPerApp\HighPer\Realtime\RealtimeServiceProvider;
 
 $container = new Container();
 
