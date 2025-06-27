@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3|^8.4",
-        "highperapp/highper-core": "^1.0",
+        "highperapp/highper-php": "^1.0",
         "amphp/websocket-server": "^4.0",
         "amphp/http-server": "^3.0",
         "amphp/http-client": "^5.0",
