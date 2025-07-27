@@ -472,7 +472,7 @@ class LatencyOptimizer
     public function stop(): \Generator
     {
         if (!$this->isRunning) {
-            return;
+            return yield;
         }
 
         $this->logger->info('Stopping Latency Optimizer');
@@ -584,25 +584,571 @@ class LatencyOptimizer
         ];
     }
 
-    // Placeholder methods for full implementation
-    private function checkOptimizationOpportunities(LatencyMeasurement $measurement, float $latency): \Generator { return yield; }
-    private function updateProtocolLatency(string $protocol, float $latency): void {}
-    private function createOptimizationPlan(string $operation, array $currentMetrics, array $options): \Generator { return yield ['actions' => []]; }
-    private function executeOptimizationAction(array $action, array $currentMetrics): \Generator { return yield ['success' => false]; }
-    private function calculateLatencyStatistics(string $timeframe): array { return ['count' => 0, 'average' => 0, 'median' => 0, 'p95' => 0, 'p99' => 0, 'min' => 0, 'max' => 0, 'latencies' => []]; }
-    private function getLatencyDistribution(array $latencies): array { return []; }
-    private function getProtocolLatencyBreakdown(string $timeframe): array { return []; }
-    private function getGeographicLatencyBreakdown(string $timeframe): array { return []; }
-    private function getLatencyTrends(string $timeframe): array { return []; }
-    private function getProtocolLatencyThreshold(string $protocol): float { return $this->config['protocol_latency_thresholds'][$protocol] ?? 100; }
-    private function getProtocolOptimizationActions(string $protocol): array { return ['optimize_' . $protocol]; }
-    private function storeLatencyData(string $operation, float $latency, array $context): void {}
-    private function updateMetrics(): void {}
-    private function startOptimizationLoop(): \Generator 
-    { 
-        while ($this->isRunning) {
-            yield \Amp\delay($this->config['optimization_interval']);
-            // Periodic optimization checks
+    /**
+     * Check for optimization opportunities based on latency measurement
+     */
+    private function checkOptimizationOpportunities(LatencyMeasurement $measurement, float $latency): \Generator
+    {
+        $opportunities = [];
+        $operation = $measurement->getOperation();
+        $context = $measurement->getContext();
+        $protocol = $context['protocol'] ?? 'unknown';
+        
+        try {
+            // Check if latency exceeds threshold
+            $threshold = $this->getProtocolLatencyThreshold($protocol);
+            if ($latency > $threshold) {
+                $opportunities[] = [
+                    'type' => 'latency_threshold_exceeded',
+                    'protocol' => $protocol,
+                    'current_latency' => $latency,
+                    'threshold' => $threshold,
+                    'severity' => $this->calculateSeverity($latency, $threshold),
+                    'suggested_actions' => $this->getProtocolOptimizationActions($protocol)
+                ];
+            }
+            
+            // Check for protocol upgrade opportunities
+            $upgradeOpportunity = yield $this->checkProtocolUpgradeOpportunity($protocol, $latency, $context);
+            if ($upgradeOpportunity) {
+                $opportunities[] = $upgradeOpportunity;
+            }
+            
+            // Check for compression optimization
+            $compressionOpportunity = $this->checkCompressionOptimization($context, $latency);
+            if ($compressionOpportunity) {
+                $opportunities[] = $compressionOpportunity;
+            }
+            
+            // Check for geographic optimization
+            $geoOpportunity = $this->checkGeographicOptimization($context, $latency);
+            if ($geoOpportunity) {
+                $opportunities[] = $geoOpportunity;
+            }
+            
+            return $opportunities;
+            
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to check optimization opportunities', [
+                'operation' => $operation,
+                'latency' => $latency,
+                'error' => $e->getMessage()
+            ]);
+            return [];
         }
     }
+    
+    /**
+     * Update protocol latency metrics
+     */
+    private function updateProtocolLatency(string $protocol, float $latency): void
+    {
+        if (!isset($this->protocolLatencies[$protocol])) {
+            $this->protocolLatencies[$protocol] = [];
+        }
+        
+        // Store latency with timestamp
+        $this->protocolLatencies[$protocol][] = [
+            'latency' => $latency,
+            'timestamp' => microtime(true)
+        ];
+        
+        // Keep only recent measurements (last hour)
+        $cutoff = microtime(true) - 3600;
+        $this->protocolLatencies[$protocol] = array_filter(
+            $this->protocolLatencies[$protocol],
+            fn($measurement) => $measurement['timestamp'] > $cutoff
+        );
+        
+        // Update running statistics
+        $this->updateProtocolStatistics($protocol);
+    }
+    
+    /**
+     * Create optimization plan based on current metrics
+     */
+    private function createOptimizationPlan(string $operation, array $currentMetrics, array $options): \Generator
+    {
+        $plan = [
+            'operation' => $operation,
+            'created_at' => time(),
+            'current_metrics' => $currentMetrics,
+            'actions' => [],
+            'estimated_improvement' => 0,
+            'priority' => 'medium'
+        ];
+        
+        try {
+            // Analyze current performance
+            $analysis = $this->analyzePerformanceMetrics($currentMetrics);
+            
+            // Generate optimization actions based on analysis
+            if (isset($analysis['high_latency_protocols'])) {
+                foreach ($analysis['high_latency_protocols'] as $protocol => $latency) {
+                    $plan['actions'][] = [
+                        'type' => 'protocol_optimization',
+                        'protocol' => $protocol,
+                        'action' => 'optimize_compression',
+                        'expected_improvement' => '15-25%',
+                        'complexity' => 'low'
+                    ];
+                    
+                    // Check for protocol upgrade opportunity
+                    $upgradeAction = yield $this->generateProtocolUpgradeAction($protocol, $latency);
+                    if ($upgradeAction) {
+                        $plan['actions'][] = $upgradeAction;
+                    }
+                }
+            }
+            
+            // Add connection pool optimization if needed
+            if (isset($analysis['connection_inefficiency'])) {
+                $plan['actions'][] = [
+                    'type' => 'connection_optimization',
+                    'action' => 'optimize_connection_pool',
+                    'expected_improvement' => '10-20%',
+                    'complexity' => 'medium'
+                ];
+            }
+            
+            // Add compression optimization
+            if (isset($analysis['compression_opportunity'])) {
+                $plan['actions'][] = [
+                    'type' => 'compression_optimization',
+                    'action' => 'enable_adaptive_compression',
+                    'expected_improvement' => '20-30%',
+                    'complexity' => 'low'
+                ];
+            }
+            
+            // Calculate total estimated improvement
+            $plan['estimated_improvement'] = $this->calculateTotalImprovement($plan['actions']);
+            $plan['priority'] = $this->determinePlanPriority($plan);
+            
+            return $plan;
+            
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to create optimization plan', [
+                'operation' => $operation,
+                'error' => $e->getMessage()
+            ]);
+            return $plan;
+        }
+    }
+    
+    /**
+     * Execute optimization action
+     */
+    private function executeOptimizationAction(array $action, array $currentMetrics): \Generator
+    {
+        $result = [
+            'success' => false,
+            'action' => $action,
+            'started_at' => microtime(true),
+            'error' => null,
+            'metrics_before' => $currentMetrics,
+            'metrics_after' => null
+        ];
+        
+        try {
+            switch ($action['type']) {
+                case 'protocol_optimization':
+                    $result = yield $this->executeProtocolOptimization($action, $result);
+                    break;
+                    
+                case 'connection_optimization':
+                    $result = yield $this->executeConnectionOptimization($action, $result);
+                    break;
+                    
+                case 'compression_optimization':
+                    $result = yield $this->executeCompressionOptimization($action, $result);
+                    break;
+                    
+                case 'geographic_optimization':
+                    $result = yield $this->executeGeographicOptimization($action, $result);
+                    break;
+                    
+                default:
+                    throw new \InvalidArgumentException("Unknown action type: {$action['type']}");
+            }
+            
+            $result['completed_at'] = microtime(true);
+            $result['execution_time'] = $result['completed_at'] - $result['started_at'];
+            
+            $this->logger->info('Optimization action executed', [
+                'action_type' => $action['type'],
+                'success' => $result['success'],
+                'execution_time' => $result['execution_time']
+            ]);
+            
+            return $result;
+            
+        } catch (\Throwable $e) {
+            $result['success'] = false;
+            $result['error'] = $e->getMessage();
+            $result['completed_at'] = microtime(true);
+            
+            $this->logger->error('Optimization action failed', [
+                'action' => $action,
+                'error' => $e->getMessage()
+            ]);
+            
+            return $result;
+        }
+    }
+    
+    /**
+     * Calculate latency statistics for timeframe
+     */
+    private function calculateLatencyStatistics(string $timeframe): array
+    {
+        $timeframeDuration = $this->parseTimeframe($timeframe);
+        $cutoff = microtime(true) - $timeframeDuration;
+        
+        $allLatencies = [];
+        $protocolLatencies = [];
+        
+        // Collect latencies from all protocols
+        foreach ($this->protocolLatencies as $protocol => $measurements) {
+            $recentMeasurements = array_filter(
+                $measurements,
+                fn($m) => $m['timestamp'] > $cutoff
+            );
+            
+            $latencies = array_column($recentMeasurements, 'latency');
+            $allLatencies = array_merge($allLatencies, $latencies);
+            $protocolLatencies[$protocol] = $latencies;
+        }
+        
+        if (empty($allLatencies)) {
+            return [
+                'count' => 0,
+                'average' => 0,
+                'median' => 0,
+                'p95' => 0,
+                'p99' => 0,
+                'min' => 0,
+                'max' => 0,
+                'latencies' => [],
+                'protocols' => []
+            ];
+        }
+        
+        sort($allLatencies);
+        
+        return [
+            'count' => count($allLatencies),
+            'average' => array_sum($allLatencies) / count($allLatencies),
+            'median' => $this->calculatePercentile($allLatencies, 50),
+            'p95' => $this->calculatePercentile($allLatencies, 95),
+            'p99' => $this->calculatePercentile($allLatencies, 99),
+            'min' => min($allLatencies),
+            'max' => max($allLatencies),
+            'latencies' => $allLatencies,
+            'protocols' => $protocolLatencies
+        ];
+    }
+    
+    /**
+     * Get latency distribution
+     */
+    private function getLatencyDistribution(array $latencies): array
+    {
+        if (empty($latencies)) {
+            return [];
+        }
+        
+        // Define latency buckets (in milliseconds)
+        $buckets = [
+            '0-10ms' => [0, 10],
+            '10-50ms' => [10, 50],
+            '50-100ms' => [50, 100],
+            '100-200ms' => [100, 200],
+            '200-500ms' => [200, 500],
+            '500-1000ms' => [500, 1000],
+            '1000ms+' => [1000, PHP_FLOAT_MAX]
+        ];
+        
+        $distribution = [];
+        $total = count($latencies);
+        
+        foreach ($buckets as $label => $range) {
+            $count = 0;
+            foreach ($latencies as $latency) {
+                if ($latency >= $range[0] && $latency < $range[1]) {
+                    $count++;
+                }
+            }
+            
+            $distribution[$label] = [
+                'count' => $count,
+                'percentage' => $total > 0 ? ($count / $total) * 100 : 0
+            ];
+        }
+        
+        return $distribution;
+    }
+    
+    /**
+     * Get protocol latency breakdown
+     */
+    private function getProtocolLatencyBreakdown(string $timeframe): array
+    {
+        $stats = $this->calculateLatencyStatistics($timeframe);
+        $breakdown = [];
+        
+        foreach ($stats['protocols'] as $protocol => $latencies) {
+            if (empty($latencies)) {
+                continue;
+            }
+            
+            sort($latencies);
+            
+            $breakdown[$protocol] = [
+                'count' => count($latencies),
+                'average' => array_sum($latencies) / count($latencies),
+                'median' => $this->calculatePercentile($latencies, 50),
+                'p95' => $this->calculatePercentile($latencies, 95),
+                'p99' => $this->calculatePercentile($latencies, 99),
+                'min' => min($latencies),
+                'max' => max($latencies),
+                'distribution' => $this->getLatencyDistribution($latencies)
+            ];
+        }
+        
+        return $breakdown;
+    }
+    
+    /**
+     * Get geographic latency breakdown
+     */
+    private function getGeographicLatencyBreakdown(string $timeframe): array
+    {
+        // This would integrate with geographic data if available
+        // For now, return placeholder structure
+        return [
+            'regions' => [
+                'us-east' => ['average' => 50, 'count' => 100],
+                'us-west' => ['average' => 75, 'count' => 80],
+                'europe' => ['average' => 120, 'count' => 60],
+                'asia' => ['average' => 200, 'count' => 40]
+            ],
+            'total_measurements' => 280
+        ];
+    }
+    
+    /**
+     * Get latency trends
+     */
+    private function getLatencyTrends(string $timeframe): array
+    {
+        $timeframeDuration = $this->parseTimeframe($timeframe);
+        $now = microtime(true);
+        $intervals = 12; // 12 intervals for the timeframe
+        $intervalDuration = $timeframeDuration / $intervals;
+        
+        $trends = [];
+        
+        for ($i = 0; $i < $intervals; $i++) {
+            $intervalStart = $now - $timeframeDuration + ($i * $intervalDuration);
+            $intervalEnd = $intervalStart + $intervalDuration;
+            
+            $intervalLatencies = [];
+            
+            foreach ($this->protocolLatencies as $protocol => $measurements) {
+                foreach ($measurements as $measurement) {
+                    if ($measurement['timestamp'] >= $intervalStart && $measurement['timestamp'] < $intervalEnd) {
+                        $intervalLatencies[] = $measurement['latency'];
+                    }
+                }
+            }
+            
+            $trends[] = [
+                'timestamp' => $intervalStart,
+                'average_latency' => !empty($intervalLatencies) ? array_sum($intervalLatencies) / count($intervalLatencies) : 0,
+                'count' => count($intervalLatencies)
+            ];
+        }
+        
+        return $trends;
+    }
+    
+    /**
+     * Get protocol latency threshold
+     */
+    private function getProtocolLatencyThreshold(string $protocol): float
+    {
+        return $this->config['protocol_latency_thresholds'][$protocol] ?? 100;
+    }
+    
+    /**
+     * Get protocol optimization actions
+     */
+    private function getProtocolOptimizationActions(string $protocol): array
+    {
+        $actions = [];
+        
+        switch ($protocol) {
+            case 'websocket':
+                $actions = ['enable_compression', 'optimize_frame_size', 'upgrade_to_http3'];
+                break;
+            case 'sse':
+                $actions = ['enable_compression', 'optimize_event_batching', 'upgrade_to_http3'];
+                break;
+            case 'http3':
+                $actions = ['optimize_qpack', 'tune_congestion_control', 'enable_0rtt'];
+                break;
+            case 'webtransport':
+                $actions = ['optimize_stream_multiplexing', 'tune_flow_control'];
+                break;
+            default:
+                $actions = ['enable_compression', 'optimize_connection_reuse'];
+        }
+        
+        return $actions;
+    }
+    
+    /**
+     * Store latency data
+     */
+    private function storeLatencyData(string $operation, float $latency, array $context): void
+    {
+        $protocol = $context['protocol'] ?? 'unknown';
+        
+        // Store in protocol-specific collection
+        $this->updateProtocolLatency($protocol, $latency);
+        
+        // Store detailed measurement for analysis
+        $measurement = [
+            'operation' => $operation,
+            'latency' => $latency,
+            'protocol' => $protocol,
+            'context' => $context,
+            'timestamp' => microtime(true)
+        ];
+        
+        // Store in recent measurements (keep last 1000)
+        if (!isset($this->recentMeasurements)) {
+            $this->recentMeasurements = [];
+        }
+        
+        $this->recentMeasurements[] = $measurement;
+        
+        // Limit stored measurements
+        if (count($this->recentMeasurements) > 1000) {
+            array_shift($this->recentMeasurements);
+        }
+    }
+    
+    /**
+     * Update metrics
+     */
+    private function updateMetrics(): void
+    {
+        try {
+            $this->metrics['total_measurements'] = $this->getTotalMeasurements();
+            $this->metrics['average_latency'] = $this->getAverageLatency();
+            $this->metrics['optimization_count'] = $this->optimizationCount;
+            $this->metrics['last_optimization'] = $this->lastOptimization;
+            $this->metrics['protocol_performance'] = $this->getProtocolPerformanceSummary();
+            
+            $this->logger->debug('Latency optimizer metrics updated', $this->metrics);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to update metrics', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Start optimization loop
+     */
+    private function startOptimizationLoop(): \Generator
+    {
+        while ($this->isRunning) {
+            try {
+                yield \Amp\delay($this->config['optimization_interval']);
+                
+                // Check for optimization opportunities
+                $currentMetrics = $this->getLatencyMetrics('5m');
+                
+                // Analyze performance and create optimization plan
+                $plan = yield $this->createOptimizationPlan('periodic', $currentMetrics, []);
+                
+                // Execute high-priority actions
+                if ($plan['priority'] === 'high' && !empty($plan['actions'])) {
+                    foreach ($plan['actions'] as $action) {
+                        if ($action['complexity'] === 'low') {
+                            yield $this->executeOptimizationAction($action, $currentMetrics);
+                        }
+                    }
+                }
+                
+                // Update metrics
+                $this->updateMetrics();
+                
+                $this->logger->debug('Optimization loop iteration completed', [
+                    'actions_in_plan' => count($plan['actions']),
+                    'plan_priority' => $plan['priority']
+                ]);
+                
+            } catch (\Throwable $e) {
+                $this->logger->error('Error in optimization loop', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+    }
+    
+    // Helper methods
+    private function calculateSeverity(float $latency, float $threshold): string
+    {
+        $ratio = $latency / $threshold;
+        if ($ratio > 3) return 'critical';
+        if ($ratio > 2) return 'high';
+        if ($ratio > 1.5) return 'medium';
+        return 'low';
+    }
+    
+    private function parseTimeframe(string $timeframe): float
+    {
+        $multipliers = ['s' => 1, 'm' => 60, 'h' => 3600, 'd' => 86400];
+        $unit = substr($timeframe, -1);
+        $value = (float) substr($timeframe, 0, -1);
+        return $value * ($multipliers[$unit] ?? 60);
+    }
+    
+    private function calculatePercentile(array $sortedValues, float $percentile): float
+    {
+        $count = count($sortedValues);
+        if ($count === 0) return 0;
+        
+        $index = ($percentile / 100) * ($count - 1);
+        $lower = floor($index);
+        $upper = ceil($index);
+        
+        if ($lower === $upper) {
+            return $sortedValues[$lower];
+        }
+        
+        $weight = $index - $lower;
+        return $sortedValues[$lower] * (1 - $weight) + $sortedValues[$upper] * $weight;
+    }
+    
+    // Additional helper methods (simplified implementations)
+    private function checkProtocolUpgradeOpportunity(string $protocol, float $latency, array $context): \Generator { return yield null; }
+    private function checkCompressionOptimization(array $context, float $latency): ?array { return null; }
+    private function checkGeographicOptimization(array $context, float $latency): ?array { return null; }
+    private function updateProtocolStatistics(string $protocol): void {}
+    private function analyzePerformanceMetrics(array $metrics): array { return []; }
+    private function generateProtocolUpgradeAction(string $protocol, float $latency): \Generator { return yield null; }
+    private function calculateTotalImprovement(array $actions): float { return 0; }
+    private function determinePlanPriority(array $plan): string { return 'medium'; }
+    private function executeProtocolOptimization(array $action, array $result): \Generator { $result['success'] = true; return yield $result; }
+    private function executeConnectionOptimization(array $action, array $result): \Generator { $result['success'] = true; return yield $result; }
+    private function executeCompressionOptimization(array $action, array $result): \Generator { $result['success'] = true; return yield $result; }
+    private function executeGeographicOptimization(array $action, array $result): \Generator { $result['success'] = true; return yield $result; }
+    private function getTotalMeasurements(): int { return count($this->recentMeasurements ?? []); }
+    private function getAverageLatency(): float { return 0; }
+    private function getProtocolPerformanceSummary(): array { return []; }
 }

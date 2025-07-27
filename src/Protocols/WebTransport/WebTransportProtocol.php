@@ -9,6 +9,7 @@ use Amp\Http\Server\Response;
 use HighPerApp\HighPer\Realtime\Protocols\ProtocolInterface;
 use HighPerApp\HighPer\Realtime\Protocols\Http3\QuicConnection;
 use HighPerApp\HighPer\Realtime\Protocols\Http3\Http3Server;
+use HighPerApp\HighPer\Compression\CompressionManager;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -22,9 +23,11 @@ class WebTransportProtocol implements ProtocolInterface
     private LoggerInterface $logger;
     private array $config;
     private Http3Server $http3Server;
+    private CompressionManager $compressionEngine;
     private WebTransportSessionManager $sessionManager;
     private WebTransportStreamManager $streamManager;
     private WebTransportDatagramManager $datagramManager;
+    private WebTransportCompressionManager $compressionManager;
     
     private array $sessions = [];
     private array $channels = [];
@@ -32,11 +35,12 @@ class WebTransportProtocol implements ProtocolInterface
     private bool $isRunning = false;
     private array $metrics = [];
 
-    public function __construct(LoggerInterface $logger, array $config, Http3Server $http3Server)
+    public function __construct(LoggerInterface $logger, array $config, Http3Server $http3Server, CompressionManager $compressionEngine)
     {
         $this->logger = $logger;
         $this->config = array_merge($this->getDefaultConfig(), $config);
         $this->http3Server = $http3Server;
+        $this->compressionEngine = $compressionEngine;
         
         $this->initializeComponents();
         $this->initializeMetrics();
@@ -47,6 +51,7 @@ class WebTransportProtocol implements ProtocolInterface
      */
     private function initializeComponents(): void
     {
+        $this->compressionManager = new WebTransportCompressionManager($this->compressionEngine, $this->logger, $this->config['compression'] ?? []);
         $this->sessionManager = new WebTransportSessionManager($this->logger, $this->config);
         $this->streamManager = new WebTransportStreamManager($this->logger, $this->config);
         $this->datagramManager = new WebTransportDatagramManager($this->logger, $this->config);

@@ -33,7 +33,7 @@ class SSEMultiplexer
     /**
      * Create a new multiplexed SSE stream
      */
-    public async function createStream(
+    public function createStream(
         QuicConnection $connection,
         string $streamName,
         array $options = []
@@ -73,18 +73,18 @@ class SSEMultiplexer
     /**
      * Send event to specific stream
      */
-    public async function sendToStream(string $streamId, array $eventData): bool
+    public function sendToStream(string $streamId, array $eventData): \Generator
     {
         if (!isset($this->multiplexedStreams[$streamId])) {
             $this->logger->warning("Attempted to send to non-existent stream", ['stream_id' => $streamId]);
-            return false;
+            return yield false;
         }
         
         $stream = $this->multiplexedStreams[$streamId];
         
         // Apply stream filter if configured
         if ($this->streamFilters[$streamId] && !$this->applyFilter($streamId, $eventData)) {
-            return false;
+            return yield false;
         }
         
         // Add stream metadata to event
@@ -98,13 +98,13 @@ class SSEMultiplexer
             $this->updateStreamMetrics($streamId, $eventData);
         }
         
-        return $success;
+        return yield $success;
     }
     
     /**
      * Broadcast event to multiple streams
      */
-    public async function broadcast(array $eventData, array $streamIds = null): array
+    public function broadcast(array $eventData, array $streamIds = null): \Generator
     {
         $targetStreams = $streamIds ?? array_keys($this->multiplexedStreams);
         $results = [];
@@ -122,13 +122,13 @@ class SSEMultiplexer
             'successful_sends' => count(array_filter($results))
         ]);
         
-        return $results;
+        return yield $results;
     }
     
     /**
      * Send different events to different streams simultaneously
      */
-    public async function multicast(array $streamEvents): array
+    public function multicast(array $streamEvents): \Generator
     {
         $promises = [];
         $results = [];
@@ -142,7 +142,7 @@ class SSEMultiplexer
             $results[$streamId] = yield $promise;
         }
         
-        return $results;
+        return yield $results;
     }
     
     /**
@@ -156,10 +156,10 @@ class SSEMultiplexer
     /**
      * Close specific stream
      */
-    public async function closeStream(string $streamId): bool
+    public function closeStream(string $streamId): \Generator
     {
         if (!isset($this->multiplexedStreams[$streamId])) {
-            return false;
+            return yield false;
         }
         
         $stream = $this->multiplexedStreams[$streamId];
@@ -172,7 +172,7 @@ class SSEMultiplexer
         
         $this->logger->info("Closed multiplexed SSE stream", ['stream_id' => $streamId]);
         
-        return true;
+        return yield true;
     }
     
     /**
@@ -331,10 +331,10 @@ class SSEMultiplexedStream
         return $this->active && $this->connection->isAlive();
     }
     
-    public async function sendEvent(array $eventData): bool
+    public function sendEvent(array $eventData): \Generator
     {
         if (!$this->isActive()) {
-            return false;
+            return yield false;
         }
         
         try {
@@ -346,18 +346,18 @@ class SSEMultiplexedStream
             
             $this->lastActivity = microtime(true);
             
-            return true;
+            return yield true;
         } catch (\Throwable $e) {
             $this->logger->error("Failed to send SSE event to stream", [
                 'stream_id' => $this->id,
                 'error' => $e->getMessage()
             ]);
             
-            return false;
+            return yield false;
         }
     }
     
-    public async function close(): void
+    public function close(): \Generator
     {
         $this->active = false;
         
@@ -369,6 +369,8 @@ class SSEMultiplexedStream
                 'error' => $e->getMessage()
             ]);
         }
+        
+        return yield;
     }
     
     private function formatSSEEvent(array $eventData): string
@@ -415,7 +417,7 @@ class SSEStreamGroup
         $this->multiplexer = $multiplexer;
     }
     
-    public async function broadcast(array $eventData): array
+    public function broadcast(array $eventData): \Generator
     {
         return yield $this->multiplexer->broadcast($eventData, $this->streamIds);
     }

@@ -794,13 +794,13 @@ class SSEHttp3Protocol implements ProtocolInterface
     /**
      * Create multiplexed SSE stream
      */
-    public async function createMultiplexedStream(
+    public function createMultiplexedStream(
         string $connectionId,
         string $streamName,
         array $options = []
-    ): ?SSEMultiplexedStream {
+    ): \Generator {
         if (!isset($this->connections[$connectionId])) {
-            return null;
+            return yield null;
         }
         
         $connection = $this->connections[$connectionId]->getQuicConnection();
@@ -812,13 +812,13 @@ class SSEHttp3Protocol implements ProtocolInterface
             'stream_id' => $stream->getId()
         ]);
         
-        return $stream;
+        return yield $stream;
     }
     
     /**
      * Send event to specific multiplexed stream
      */
-    public async function sendToMultiplexedStream(string $streamId, array $eventData): bool
+    public function sendToMultiplexedStream(string $streamId, array $eventData): \Generator
     {
         return yield $this->multiplexer->sendToStream($streamId, $eventData);
     }
@@ -826,7 +826,7 @@ class SSEHttp3Protocol implements ProtocolInterface
     /**
      * Broadcast to multiple multiplexed streams
      */
-    public async function broadcastToMultiplexedStreams(array $eventData, array $streamIds = null): array
+    public function broadcastToMultiplexedStreams(array $eventData, array $streamIds = null): \Generator
     {
         return yield $this->multiplexer->broadcast($eventData, $streamIds);
     }
@@ -850,7 +850,7 @@ class SSEHttp3Protocol implements ProtocolInterface
     /**
      * Close multiplexed stream
      */
-    public async function closeMultiplexedStream(string $streamId): bool
+    public function closeMultiplexedStream(string $streamId): \Generator
     {
         return yield $this->multiplexer->closeStream($streamId);
     }

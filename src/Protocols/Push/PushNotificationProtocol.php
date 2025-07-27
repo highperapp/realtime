@@ -623,7 +623,7 @@ class PushNotificationProtocol implements ProtocolInterface
     public function stop(): \Generator
     {
         if (!$this->isRunning) {
-            return;
+            return yield;
         }
 
         $this->logger->info('Stopping Push Notification service');
@@ -631,6 +631,8 @@ class PushNotificationProtocol implements ProtocolInterface
         $this->isRunning = false;
         
         $this->logger->info('Push Notification service stopped');
+        
+        return yield;
     }
 
     /**

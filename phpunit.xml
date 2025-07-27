@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         cacheResult="false">
+    
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Performance">
+            <directory>tests/Performance</directory>
+        </testsuite>
+        <testsuite name="Concurrency">
+            <directory>tests/Concurrency</directory>
+        </testsuite>
+        <testsuite name="Reliability">
+            <directory>tests/Reliability</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <exclude>
+            <directory>src/Examples</directory>
+            <file>src/RealtimeServiceProvider.php</file>
+        </exclude>
+    </source>
+
+    <coverage>
+        <report>
+            <html outputDirectory="coverage-html"/>
+            <text outputFile="coverage.txt"/>
+            <clover outputFile="coverage.xml"/>
+        </report>
+    </coverage>
+
+    <logging>
+        <junit outputFile="junit.xml"/>
+    </logging>
+
+    <groups>
+        <include>
+            <group>unit</group>
+            <group>integration</group>
+        </include>
+        <exclude>
+            <group>performance</group>
+            <group>concurrency</group>
+            <group>reliability</group>
+        </exclude>
+    </groups>
+
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="REALTIME_ENABLED" value="true"/>
+        <env name="REALTIME_HOST" value="127.0.0.1"/>
+        <env name="REALTIME_PORT" value="8080"/>
+        <env name="WEBSOCKET_ENABLED" value="true"/>
+        <env name="SSE_ENABLED" value="true"/>
+        <env name="WEBTRANSPORT_ENABLED" value="true"/>
+        <env name="REALTIME_MAX_CONNECTIONS" value="1000"/>
+        <env name="REALTIME_CONNECTION_TIMEOUT" value="30"/>
+    </php>
+</phpunit>

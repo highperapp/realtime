@@ -636,7 +636,7 @@ class MediaStreamProtocol implements ProtocolInterface
     public function leaveChannel(string $connectionId, string $roomId): \Generator
     {
         if (!isset($this->mediaRooms[$roomId])) {
-            return;
+            return yield;
         }
 
         unset($this->mediaRooms[$roomId]['broadcasters'][$connectionId]);
@@ -648,6 +648,8 @@ class MediaStreamProtocol implements ProtocolInterface
             unset($this->mediaRooms[$roomId]);
             $this->metrics['concurrent_rooms']--;
         }
+        
+        return yield;
     }
 
     /**

@@ -137,7 +137,7 @@ class ProtocolABTester
     public function analyzeExperiment(string $experimentId): \Generator
     {
         if (!isset($this->activeExperiments[$experimentId])) {
-            return null;
+            return yield null;
         }
 
         $experiment = $this->activeExperiments[$experimentId];
@@ -152,7 +152,7 @@ class ProtocolABTester
             }
         }
 
-        return $analysisResult;
+        return yield $analysisResult;
     }
 
     /**
@@ -205,12 +205,13 @@ class ProtocolABTester
     public function stop(): \Generator
     {
         if (!$this->isRunning) {
-            return;
+            return yield;
         }
 
         $this->logger->info('Stopping Protocol A/B Testing service');
         $this->isRunning = false;
         $this->logger->info('Protocol A/B Testing service stopped');
+        return yield;
     }
 
     /**
